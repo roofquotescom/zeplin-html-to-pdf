@@ -1,6 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Resources:
+  ApiGateway: 
+    Type: 'AWS::Serverless::Api'
+    Properties:
+      StageName: Prod
+      BinaryMediaTypes: 
+        - 'application/pdf'
+
   HtmlToPdf:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -8,8 +15,21 @@ Resources:
       Runtime: nodejs18.x
       CodeUri: .
       Description: A html to pdf converter lambda function
-      MemorySize: 128
+      MemorySize: 4096
       Timeout: 30
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            #ApiId: !Ref ApiGateway
+            RestApiId: !Ref ApiGateway
+            Path: /convert
+            Method: POST
+              
       Environment:
         Variables:
           FONTCONFIG_PATH: /var/task/fonts
+Outputs:
+  ApiUrl:
+    Description: 'API Gateway endpoint'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
